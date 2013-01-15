@@ -3,13 +3,9 @@ DXRBuilder
 
 DXRBuilder是用来转换SWF文件为[Flexlite](http://flexlite.org/)框架可用的DXR动画文件。
 
-### 编译环境
-* Flex SDK 4.6
-* Air SDK 3.5
-
 ### 使用说明
 
-DXRBuilder只支持导出指定swf文件中含有链接名的MovieClip元件为FlexLite中使用的DXR文件，所以在进行导出前，请确保swf文件中只有MovieClip元件设置了链接名。
+[安装文件下载](http://github.com/bindiry/DXRBuilder/raw/master/DXRBuilder.air)，DXRBuilder只支持导出指定swf文件中含有链接名的MovieClip元件为FlexLite中使用的DXR文件，所以在进行导出前，请确保swf文件中只有MovieClip元件设置了链接名。
 
 关于DXR动画文件的使用，请参考Flexlite的[WIKI](http://wiki.flexlite.org)、[源码](http://github.com/flexlite)和DXR动画文件[结构图](http://wiki.flexlite.org/uploads/201210/1350297604fFF5kVj7.png)。
 
@@ -18,7 +14,10 @@ DXRBuilder只支持导出指定swf文件中含有链接名的MovieClip元件为F
 * JPEGXR: 压缩率高效果好但只支持FP11以上版本
 * PNG: 压缩率不高，但效果好
 
-![DXRBuilder载图](https://raw.github.com/bindiry/DXRBuilder/master/dxrbuilder.png)
+### 编译环境
+编译前，需在项目源路径中引入libs目录，项目需使用 [Flex SDK 4.6](http://www.adobe.com/devnet/flex/flex-sdk-download.html) 和 [Air SDK 3.5](http://www.adobe.com/devnet/air/air-sdk-download.html)。
+
+![DXRBuilder载图](http://raw.github.com/bindiry/DXRBuilder/master/dxrbuilder.png)
 
 ### 版本记录
 
