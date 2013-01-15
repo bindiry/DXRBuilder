@@ -13,3 +13,4 @@ bin-release/
 .actionScriptProperties
 .flexProperties
 .project
+bin-release-temp/
