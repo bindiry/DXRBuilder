@@ -18,6 +18,8 @@ DXRBuilder只支持导出指定swf文件中含有链接名的MovieClip元件为F
 * JPEGXR: 压缩率高效果好但只支持FP11以上版本
 * PNG: 压缩率不高，但效果好
 
+![DXRBuilder载图](https://raw.github.com/bindiry/DXRBuilder/master/dxrbuilder.png)
+
 ### 版本记录
 
 ##### v1.0.0 (01/15/2012)
