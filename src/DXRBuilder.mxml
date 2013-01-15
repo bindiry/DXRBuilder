@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+					   xmlns:s="library://ns.adobe.com/flex/spark"
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   width="400" height="440"
+					   showStatusBar="false"
+					   creationComplete="application1_creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.graphics.codec.PNGEncoder;
+			
+			import org.flexlite.domCore.Injector;
+			import org.flexlite.domDisplay.codec.IBitmapEncoder;
+			import org.flexlite.domDisplay.image.Jpeg32Encoder;
+			import org.flexlite.domDisplay.image.JpegXREncoder;
+			
+			[Bindable]
+			public var exportFormatList:ArrayCollection = new ArrayCollection([
+				{label: "JPEG32", value: "jpeg32"},
+				{label: "JPEGXR", value: "jpegxr"},
+				{label: "PNG", value: "png"}
+			]);
+			
+			/** 应用初始化 */
+			protected function application1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// 初骀化文件处理器
+				FileHandler.getInstance().init(btnChooseFiles, listFiles);
+				// 文件列表相关
+				listFiles.allowMultipleSelection = false;
+				// 初始化注入规则
+				Injector.mapValue(IBitmapEncoder,new Jpeg32Encoder(),"jpeg32");
+				Injector.mapValue(IBitmapEncoder,new JpegXREncoder(),"jpegxr");
+				Injector.mapValue(IBitmapEncoder,new PNGEncoder(),"png");
+			}
+			
+			/** 用户选择文件 */
+			protected function chooseFiles_clickHandler(e:MouseEvent):void
+			{
+				FileHandler.getInstance().selectFiles();
+			}
+			
+			/** 选择导出文件夹按钮单击事件 */
+			protected function btnExportPath_clickHandler(event:MouseEvent):void
+			{
+				var file:File = File.desktopDirectory;
+				file.browseForDirectory("选择导出文件夹");
+				file.addEventListener(Event.SELECT, onDirectorySelected);
+			}
+			
+			/** 选择导出文件夹后的处理 */
+			protected function onDirectorySelected(e:Event):void
+			{
+				var directory:File = e.target as File;
+				Global.exportPath = directory.nativePath;
+				btnExportPath.label = "选择导出文件夹... (" + Global.getSimplePath(directory.nativePath) + ")";
+			}
+			
+			/** 导出文件复选项单击事件 */
+			protected function checkboxSourcePath_clickHandler(event:MouseEvent):void
+			{
+				if (checkboxSourcePath.selected)
+				{
+					Global.sameAsSource = true;
+					btnExportPath.enabled = false;
+				}
+				else
+				{
+					Global.sameAsSource = false;
+					btnExportPath.enabled = true;
+				}
+			}
+			
+			/** 移除列表中选中的文件 */
+			protected function btnRemove_clickHandler(e:MouseEvent):void
+			{
+				for each(var selected:int in listFiles.selectedIndices)
+				{
+					listFiles.dataProvider.removeItemAt(selected);
+				}
+			}
+			
+			/** 清空按钮单击事件 */
+			protected function btnClear_clickHandler(e:MouseEvent):void
+			{
+				if (listFiles.dataProvider == null || listFiles.dataProvider.length <= 0) return;
+				Alert.show("确认要清空吗？", "确认信息", Alert.YES|Alert.NO, null, function(e:CloseEvent):void {
+					if (e.detail == Alert.YES)
+					{
+						while (listFiles.dataProvider.length > 0)
+							listFiles.dataProvider.removeAll();
+					}
+				});
+			}
+			
+			/** 开始导出 */
+			protected function btnExport_clickHandler(e:MouseEvent):void
+			{
+				setControlsStatus(false);
+				if (!Global.sameAsSource && Global.exportPath == "")
+				{
+					Alert.show("请选择导出文件夹", "提示信息");
+					setControlsStatus(true);
+					return;
+				}
+				
+				FileHandler.getInstance().exportFiles(ddlExportFormat, function():void {
+					setControlsStatus(true);
+				});
+			}
+			
+			/** 设置控件状态 */
+			private function setControlsStatus(pStatus:Boolean):void
+			{
+				btnChooseFiles.enabled = pStatus;
+				btnRemove.enabled = pStatus;
+				btnClear.enabled = pStatus;
+				if (!Global.sameAsSource)
+					btnExportPath.enabled = pStatus;
+				checkboxSourcePath.enabled = pStatus;
+				btnExport.enabled = pStatus;
+			}
+			
+			protected function btnHelp_clickHandler(e:MouseEvent):void
+			{
+				var helpString:String = "此工具只支持导出指定swf文件中含有链接名的MovieClip元件为FlexLite中使用的DXR文件，" +
+					"所以在进行导出前，请确保swf文件中只有MovieClip元件设置了链接名。\n\n" +
+					"压缩格式说明：\n" +
+					"JPEG32: 压缩率最高，但效果稍差\n" +
+					"JPEGXR: 压缩率高效果好但只支持FP11以上版本\n" +
+					"PNG: 压缩率不高，但效果好\n\n" +
+					"本工具代码托管在：http://github.com/bindiry/dxrbuilder\n" +
+					"如有问题请通过 bindiry@gmail.com 联系我\n\n" +
+					"关于dxr文件的使用，请参考FlexLite官方网站：\n" +
+					"http://flexlite.org/\n" +
+					"http://github.com/flexlite";
+					
+				
+				Alert.show(helpString, "帮助");
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:List id="listFiles" x="13" y="70" width="373" height="245"></s:List>
+	<s:Label x="17" y="50" text="已载入文件:"/>
+	<s:Button id="btnChooseFiles" x="14" y="12" width="273" label="添加文件(可多选)..."
+			  click="chooseFiles_clickHandler(event)"/>
+	<s:CheckBox id="checkboxSourcePath" x="297" y="369" label="与源文件相同"
+				click="checkboxSourcePath_clickHandler(event)" fontFamily="Verdana" fontSize="12"
+				fontWeight="normal"/>
+	<s:Button id="btnExportPath" x="14" y="368" width="275" label="选择导出文件夹..."
+			  click="btnExportPath_clickHandler(event)"/>
+	<s:Button id="btnExport" x="205" y="406" width="180" height="20" label="开始导出"
+			  click="btnExport_clickHandler(event)" fontFamily="Arial" fontSize="12" fontWeight="bold"/>
+	<s:Button id="btnRemove" x="13" y="331" width="182" label="移除"
+			  click="btnRemove_clickHandler(event)"/>
+	<s:Button id="btnClear" x="205" y="331" width="182" label="清空列表"
+			  click="btnClear_clickHandler(event)"/>
+	<s:Button id="btnHelp" x="297" y="12" width="89" label="关于" click="btnHelp_clickHandler(event)"/>
+	<s:DropDownList id="ddlExportFormat" x="69" y="406" width="126" dataProvider="{exportFormatList}"
+					labelField="label" selectedIndex="0">
+	</s:DropDownList>
+	<s:Label x="14" y="411" text="压缩格式:"/>
+</s:WindowedApplication>
