@@ -27,7 +27,7 @@ DXRBuilder是用来转换SWF文件为[Flexlite](http://flexlite.org/)框架可�
 License
 -------
 
-This plugin released under MIT License:
+This software released under MIT License:
 
     Copyright (c) 2013 Bindiry
 
