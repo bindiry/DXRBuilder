@@ -87,20 +87,21 @@ package
 				var file:File = _loadFileList[_currentLoadFileIndex];
 				if (!checkFileIsExist(file))
 				{
-					DomLoader.loadExternalClasses(file.nativePath, function(pResult:Object):void {
+					DomLoader.loadExternalClasses(file.nativePath, function(clslist:Array, keylist:Array):void {
 						var mclist:Array = [];
 						var mc:MovieClip;
-						for each (var cls:Class in pResult.clslist)
+						for each (var cls:Class in clslist)
 						{
 							mc = new cls();
+							mc.gotoAndStop(1);
 							mclist.push(mc);
 						}
 						var keylist:Array = [];
-						for each (var key:String in pResult.keylist)
+						for each (var key:String in keylist)
 						{
 							keylist.push(key);
 						}
-						var field:String = file.name + " (" + pResult.clslist.length + "个导出元件)";
+						var field:String = file.name + " (" + clslist.length + "个导出元件)";
 						var obj:Object = {field: field, name: file.name, path: file.nativePath, mclist: mclist, keylist: keylist};
 						_filesArrayList.addItem(obj);
 						_currentLoadFileIndex++;
@@ -133,7 +134,6 @@ package
 				// 参考：http://blog.domlib.com/articles/353.html
 				for each (var mc:MovieClip in obj.mclist)
 				{
-					mc.gotoAndStop(1);
 					pContainer.addChild(mc);
 				}
 				

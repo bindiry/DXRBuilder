@@ -11,7 +11,8 @@ package org.flexlite.domUtils
 	 */	
 	public class DomLoader
 	{
-
+		
+	
 		/**
 		 * 根据url获取指定文件的Loader显示对象
 		 * @param url 文件的url路径
@@ -66,9 +67,9 @@ package org.flexlite.domUtils
 		}
 		
 		/**
-		 * 根据url获取指定文件的所有Class类定义数据
+		 * 根据url获取指定文件的所有Class类定义和键名数据
 		 * @param url 文件的url路径
-		 * @param onComp 返回结果时的回调函数 onComp(data:Class)，返回clslist: Vector.<Class>, keylist: Vector.<String>
+		 * @param onComp 返回结果时的回调函数 onComp(clslist:Array, keylist:Array)
 		 * @param onProgress 加载进度回调函数 onProgress(event:ProgressEvent)
 		 * @param onIoError 加载失败回调函数 onIoError(event:IOErrorEvent
 		 * @param appDomain 加载使用的程序域
@@ -78,7 +79,8 @@ package org.flexlite.domUtils
 			var classLoader:SingleLoader = new SingleLoader;
 			classLoader.loadExternalClasses(url,onComp,onProgress,onIoError,appDomain);
 		}
-
+		
+	
 		//==========多个加载项=========end=========
 		
 	}

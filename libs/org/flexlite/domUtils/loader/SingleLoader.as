@@ -88,9 +88,9 @@ package org.flexlite.domUtils.loader
 		}
 		
 		/**
-		 * 根据url获取指定文件的所有Class类定义数据，clslist: Vector.<Class>, keylist: Vector.<String>
+		 * 根据url获取指定文件的所有Class类定义和键名数据
 		 * @param url 文件的url路径
-		 * @param onComp 返回结果时的回调函数 onComp(data:Class)
+		 * @param onComp 返回结果时的回调函数 onComp(clslist:Array, keylist:Array)
 		 * @param onProgress 加载进度回调函数 onProgress(event:ProgressEvent)
 		 * @param onIoError 加载失败回调函数 onIoError(event:IOErrorEvent)
 		 * @param appDomain 加载使用的程序域
@@ -171,10 +171,16 @@ package org.flexlite.domUtils.loader
 						}
 						compFunc(classData);
 						loader.unload();
+						break;
 					case FORMAT_EXTERNAL_CLASSES:
-						var classList:Vector.<Class> = new Vector.<Class>();
+						var classList:Array = [];
+						var keyList:Array = [];
 						var tmpAppDomain:ApplicationDomain = loader.contentLoaderInfo.applicationDomain;
 						var linkNameList:Vector.<String> = tmpAppDomain.getQualifiedDefinitionNames();
+						for each(var linkname:String in linkNameList)
+						{
+							keyList.push(linkname);
+						}
 						var tmpClassData:Class;
 						for each (var linkName:String in linkNameList)
 						{
@@ -184,8 +190,9 @@ package org.flexlite.domUtils.loader
 								classList.push(tmpClassData);
 							}
 						}
-						compFunc({clslist: classList, keylist: linkNameList});
+						compFunc(classList, keyList);
 						loader.unload();
+						break;
 					default:;
 				}
 				
