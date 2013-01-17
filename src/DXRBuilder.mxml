@@ -7,7 +7,6 @@
 					   creationComplete="application1_creationCompleteHandler(event)">
 	<fx:Script>
 		<![CDATA[
-			
 			import mx.collections.ArrayCollection;
 			import mx.controls.Alert;
 			import mx.events.CloseEvent;
@@ -37,6 +36,8 @@
 				Injector.mapValue(IBitmapEncoder,new Jpeg32Encoder(),"jpeg32");
 				Injector.mapValue(IBitmapEncoder,new JpegXREncoder(),"jpegxr");
 				Injector.mapValue(IBitmapEncoder,new PNGEncoder(),"png");
+				
+//				MonsterDebugger.initialize(this);
 			}
 			
 			/** 用户选择文件 */
@@ -109,7 +110,7 @@
 					return;
 				}
 				
-				FileHandler.getInstance().exportFiles(ddlExportFormat, function():void {
+				FileHandler.getInstance().exportFiles(ddlExportFormat, mcContainer, function():void {
 					setControlsStatus(true);
 				});
 			}
@@ -169,4 +170,7 @@
 					labelField="label" selectedIndex="0">
 	</s:DropDownList>
 	<s:Label x="14" y="411" text="压缩格式:"/>
+	<s:SpriteVisualElement id="mcContainer" width="1" height="1" visible="false">
+		
+	</s:SpriteVisualElement>
 </s:WindowedApplication>

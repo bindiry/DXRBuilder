@@ -1,15 +1,9 @@
 package 
 {
-	import flash.display.Loader;
-	import flash.display.LoaderInfo;
 	import flash.display.MovieClip;
-	import flash.events.Event;
 	import flash.events.FileListEvent;
 	import flash.filesystem.File;
 	import flash.net.FileFilter;
-	import flash.net.URLRequest;
-	import flash.utils.ByteArray;
-	import flash.utils.getQualifiedClassName;
 	
 	import mx.collections.ArrayList;
 	
@@ -20,6 +14,7 @@ package
 	import spark.components.Button;
 	import spark.components.DropDownList;
 	import spark.components.List;
+	import spark.core.SpriteVisualElement;
 	
 	/**
 	 * 让用户选择文件
@@ -116,7 +111,7 @@ package
 		}
 		
 		/** 开始导出文件 */
-		public function exportFiles(pFormatList:DropDownList, pOnComplete:Function):void
+		public function exportFiles(pFormatList:DropDownList, pContainer:SpriteVisualElement, pOnComplete:Function):void
 		{
 			var formatList:Array = [];
 			var dxrEncode:DxrEncoder = new DxrEncoder();
@@ -134,9 +129,29 @@ package
 				else
 					path = Global.exportPath + "\\" + obj.name.substring(0, obj.name.lastIndexOf(".")) + ".dxr";
 				
-				trace(FileUtil.save(path, dxrEncode.encode(obj.mclist, obj.keylist, formatList)));
+				// 将所有mc加到显示列表，防止air版movieclip的bug而出现重影
+				// 参考：http://blog.domlib.com/articles/353.html
+				for each (var mc:MovieClip in obj.mclist)
+				{
+					mc.gotoAndStop(1);
+					pContainer.addChild(mc);
+				}
+				
+				var result:Boolean = FileUtil.save(path, dxrEncode.encode(obj.mclist, obj.keylist, formatList));
+//				MonsterDebugger.trace(result, null);
+				
+				// 把转换完的MC从显示列表移除
+				removeAllChild(pContainer);
 			}
 			pOnComplete();
+		}
+		
+		private function removeAllChild(pContainer:SpriteVisualElement):void
+		{
+			while(pContainer.numChildren > 0)
+			{
+				pContainer.removeChildAt(0);
+			}
 		}
 		
 		/** 检查是否有重复文件 */
