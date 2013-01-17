@@ -10,6 +10,7 @@
 			import mx.collections.ArrayCollection;
 			import mx.controls.Alert;
 			import mx.events.CloseEvent;
+			import mx.events.DragEvent;
 			import mx.events.FlexEvent;
 			import mx.graphics.codec.PNGEncoder;
 			
@@ -38,6 +39,29 @@
 				Injector.mapValue(IBitmapEncoder,new PNGEncoder(),"png");
 				
 //				MonsterDebugger.initialize(this);
+				
+				// 默认导出路径设置
+				checkboxSourcePath.selected = true;
+				Global.sameAsSource = true;
+				btnExportPath.enabled = false;
+				
+				// 开启拖拽文件支持
+				this.addEventListener(NativeDragEvent.NATIVE_DRAG_ENTER, onDrop);
+				this.addEventListener(NativeDragEvent.NATIVE_DRAG_DROP, onDrop);
+			}
+			
+			protected function onDrop(e:NativeDragEvent):void
+			{
+				if (e.type == NativeDragEvent.NATIVE_DRAG_ENTER)
+				{
+					NativeDragManager.acceptDragDrop(this);
+				}
+				
+				if (e.type == NativeDragEvent.NATIVE_DRAG_DROP)
+				{
+					var dropfiles:Array = e.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+					FileHandler.getInstance().onDrop(dropfiles);
+				}
 			}
 			
 			/** 用户选择文件 */
@@ -121,6 +145,7 @@
 				btnChooseFiles.enabled = pStatus;
 				btnRemove.enabled = pStatus;
 				btnClear.enabled = pStatus;
+				ddlExportFormat.enabled = pStatus;
 				if (!Global.sameAsSource)
 					btnExportPath.enabled = pStatus;
 				checkboxSourcePath.enabled = pStatus;
@@ -144,6 +169,7 @@
 				
 				Alert.show(helpString, "帮助");
 			}
+			
 			
 		]]>
 	</fx:Script>

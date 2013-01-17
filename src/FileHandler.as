@@ -6,6 +6,7 @@ package
 	import flash.net.FileFilter;
 	
 	import mx.collections.ArrayList;
+	import mx.controls.Alert;
 	
 	import org.flexlite.domDisplay.codec.DxrEncoder;
 	import org.flexlite.domUtils.DomLoader;
@@ -74,6 +75,15 @@ package
 			loadFiles();
 		}
 		
+		/** 拖拽文件到窗口中 */
+		public function onDrop(pFiles:Array):void
+		{
+			_btnSelectFiles.enabled = false;
+			_loadFileList = pFiles;
+			_currentLoadFileIndex = 0;
+			loadFiles();
+		}
+		
 		/** 开始读取文件 */
 		private function loadFiles():void
 		{
@@ -85,7 +95,7 @@ package
 			else
 			{
 				var file:File = _loadFileList[_currentLoadFileIndex];
-				if (!checkFileIsExist(file))
+				if (!checkFileIsExist(file) && file.extension.toLowerCase() == "swf")
 				{
 					DomLoader.loadExternalClasses(file.nativePath, function(clslist:Array, keylist:Array):void {
 						var mclist:Array = [];
@@ -95,11 +105,6 @@ package
 							mc = new cls();
 							mc.gotoAndStop(1);
 							mclist.push(mc);
-						}
-						var keylist:Array = [];
-						for each (var key:String in keylist)
-						{
-							keylist.push(key);
 						}
 						var field:String = file.name + " (" + clslist.length + "个导出元件)";
 						var obj:Object = {field: field, name: file.name, path: file.nativePath, mclist: mclist, keylist: keylist};
@@ -139,6 +144,9 @@ package
 				
 				var result:Boolean = FileUtil.save(path, dxrEncode.encode(obj.mclist, obj.keylist, formatList));
 //				MonsterDebugger.trace(result, null);
+				
+				var resultMessage:String = result ? "转换成功" : "转换失败";
+				Alert.show(resultMessage);
 				
 				// 把转换完的MC从显示列表移除
 				removeAllChild(pContainer);

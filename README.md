@@ -21,9 +21,13 @@ DXRBuilder是用来转换SWF文件为[Flexlite](http://flexlite.org/)框架可�
 
 ### 版本记录
 
+##### v1.1.0 (01/17/2012)
+* 新增：支持直接拖拽文件到窗口中
+* 新增：转换后的信息提示
+
 ##### v1.0.1 (01/17/2012)
-* 修正导出DXR时，动画不流畅的问题
-* 修正可能导致动画出现重影的问题 (感谢 [DOM](http://blog.domlib.com) 指导)，[参考日志](http://blog.domlib.com/articles/353.html)。
+* 修正：导出DXR时，动画不流畅的问题
+* 修正：可能导致动画出现重影的问题 (感谢 [DOM](http://blog.domlib.com) 指导)，[参考日志](http://blog.domlib.com/articles/353.html)。
 
 ##### v1.0.0 (01/15/2012)
 * 首次发布
