@@ -10,14 +10,15 @@
 			import mx.collections.ArrayCollection;
 			import mx.controls.Alert;
 			import mx.events.CloseEvent;
-			import mx.events.DragEvent;
 			import mx.events.FlexEvent;
-			import mx.graphics.codec.PNGEncoder;
+			
+			import spark.events.IndexChangeEvent;
 			
 			import org.flexlite.domCore.Injector;
 			import org.flexlite.domDisplay.codec.IBitmapEncoder;
 			import org.flexlite.domDisplay.image.Jpeg32Encoder;
 			import org.flexlite.domDisplay.image.JpegXREncoder;
+			import org.flexlite.domDisplay.image.PngEncoder;
 			
 			[Bindable]
 			public var exportFormatList:ArrayCollection = new ArrayCollection([
@@ -29,16 +30,19 @@
 			/** 应用初始化 */
 			protected function application1_creationCompleteHandler(event:FlexEvent):void
 			{
+				
 				// 初骀化文件处理器
-				FileHandler.getInstance().init(btnChooseFiles, listFiles);
+//				FileHandler.getInstance().bgWorker = WorkerFactory.getWorkerFromClass(MyWorker, this.systemManager.stage.loaderInfo.bytes);
+				FileHandler.getInstance().initialize(btnChooseFiles, listFiles);
 				// 文件列表相关
 				listFiles.allowMultipleSelection = false;
-				// 初始化注入规则
-				Injector.mapValue(IBitmapEncoder,new Jpeg32Encoder(),"jpeg32");
-				Injector.mapValue(IBitmapEncoder,new JpegXREncoder(),"jpegxr");
-				Injector.mapValue(IBitmapEncoder,new PNGEncoder(),"png");
 				
 //				MonsterDebugger.initialize(this);
+				
+				// 初始化注入规则
+				Injector.mapValue(IBitmapEncoder,new Jpeg32Encoder(), "jpeg32");
+				Injector.mapValue(IBitmapEncoder,new JpegXREncoder(), "jpegxr");
+				Injector.mapValue(IBitmapEncoder,new PngEncoder(), "png");
 				
 				// 默认导出路径设置
 				checkboxSourcePath.selected = true;
@@ -134,7 +138,7 @@
 					return;
 				}
 				
-				FileHandler.getInstance().exportFiles(ddlExportFormat, mcContainer, function():void {
+				FileHandler.getInstance().exportFiles(mcContainer, function():void {
 					setControlsStatus(true);
 				});
 			}
@@ -170,6 +174,12 @@
 				Alert.show(helpString, "帮助");
 			}
 			
+			/** 格式列表数据变更处理 */
+			protected function ddlExportFormat_changeHandler(e:IndexChangeEvent):void
+			{
+				var ddlExportFormat:DropDownList = e.target as DropDownList;
+				Global.currentFormat = ddlExportFormat.selectedItem.value;
+			}
 			
 		]]>
 	</fx:Script>
@@ -192,7 +202,8 @@
 	<s:Button id="btnClear" x="205" y="331" width="182" label="清空列表"
 			  click="btnClear_clickHandler(event)"/>
 	<s:Button id="btnHelp" x="297" y="12" width="89" label="关于" click="btnHelp_clickHandler(event)"/>
-	<s:DropDownList id="ddlExportFormat" x="69" y="406" width="126" dataProvider="{exportFormatList}"
+	<s:DropDownList id="ddlExportFormat" x="69" y="406" width="126"
+					change="ddlExportFormat_changeHandler(event)" dataProvider="{exportFormatList}"
 					labelField="label" selectedIndex="0">
 	</s:DropDownList>
 	<s:Label x="14" y="411" text="压缩格式:"/>

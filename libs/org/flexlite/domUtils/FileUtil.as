@@ -339,7 +339,7 @@ package org.flexlite.domUtils
 				}
 				else if(extension!=null)
 				{
-					if(file.extension == extension)
+					if(file.type.substring(1,file.type.length).toLowerCase() == extension)
 					{
 						result.push(file);
 					}
