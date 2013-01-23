@@ -14,3 +14,4 @@ bin-release/
 .flexProperties
 .project
 bin-release-temp/
+*.tmp

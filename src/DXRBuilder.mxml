@@ -159,7 +159,7 @@
 			protected function btnHelp_clickHandler(e:MouseEvent):void
 			{
 				var helpString:String = "此工具只支持导出指定swf文件中含有链接名的MovieClip元件为FlexLite中使用的DXR文件，" +
-					"所以在进行导出前，请确保swf文件中只有MovieClip元件设置了链接名。\n\n" +
+					"所以在进行导出前，请确保swf文件中只有MovieClip元件设置了链接名。（链接名中不能包含 :: 或 .）\n\n" +
 					"压缩格式说明：\n" +
 					"JPEG32: 压缩率最高，但效果稍差\n" +
 					"JPEGXR: 压缩率高效果好但只支持FP11以上版本\n" +
