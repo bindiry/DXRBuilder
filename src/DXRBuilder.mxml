@@ -12,13 +12,13 @@
 			import mx.events.CloseEvent;
 			import mx.events.FlexEvent;
 			
-			import spark.events.IndexChangeEvent;
-			
 			import org.flexlite.domCore.Injector;
 			import org.flexlite.domDisplay.codec.IBitmapEncoder;
 			import org.flexlite.domDisplay.image.Jpeg32Encoder;
 			import org.flexlite.domDisplay.image.JpegXREncoder;
 			import org.flexlite.domDisplay.image.PngEncoder;
+			
+			import spark.events.IndexChangeEvent;
 			
 			[Bindable]
 			public var exportFormatList:ArrayCollection = new ArrayCollection([
@@ -179,6 +179,7 @@
 			{
 				var ddlExportFormat:DropDownList = e.target as DropDownList;
 				Global.currentFormat = ddlExportFormat.selectedItem.value;
+				FileHandler.getInstance().updateFormatList();
 			}
 			
 		]]>

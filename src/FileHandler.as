@@ -1,5 +1,6 @@
 package 
 {
+	
 	import flash.display.MovieClip;
 	import flash.events.FileListEvent;
 	import flash.filesystem.File;
@@ -198,6 +199,20 @@ package
 			loadFiles();
 		}
 		
+		public function updateFormatList():void
+		{
+			var len:int;
+			for each (var obj:Object in _filesArrayList.source)
+			{
+				len = obj.formatlist.length;
+				for (var i:int = 0; i < len; i++)
+				{
+					obj.formatlist[i] = Global.currentFormat;
+				}
+			}
+			trace("1");
+		}
+		
 		/** 开始读取文件 */
 		private function loadFiles():void
 		{
@@ -263,7 +278,7 @@ package
 				}
 				if (obj.keylist.length > 0)
 				{
-					var dxrData:ByteArray = dxrEncode.encode(obj.mclist, obj.keylist, obj.formatList);
+					var dxrData:ByteArray = dxrEncode.encode(obj.mclist, obj.keylist, obj.formatlist);
 					var result:Boolean = FileUtil.save(path, dxrData);
 				}
 				else
