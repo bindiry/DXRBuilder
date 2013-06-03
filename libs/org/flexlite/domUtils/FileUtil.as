@@ -20,15 +20,18 @@ package org.flexlite.domUtils
 		 */		
 		public static function save(path:String,data:Object):Boolean
 		{
+			path = escapeUrl(path);
 			var file:File = new File(File.applicationDirectory.resolvePath(path).nativePath);
 			if(file.exists)
 			{//如果存在，先删除，防止出现文件名大小写不能覆盖的问题
 				deletePath(file.nativePath);
 			}
+			if(file.isDirectory)
+				return false;
 			var fs:FileStream = new FileStream;
-			fs.open(file,FileMode.WRITE);
 			try
 			{
+				fs.open(file,FileMode.WRITE);
 				if(data is ByteArray)
 				{
 					fs.writeBytes(data as ByteArray);
@@ -57,6 +60,7 @@ package org.flexlite.domUtils
 		 */		
 		public static function open(path:String):FileStream
 		{
+			path = escapeUrl(path);
 			var file:File = new File(File.applicationDirectory.resolvePath(path).nativePath);
 			var fs:FileStream = new FileStream;
 			try
@@ -75,6 +79,7 @@ package org.flexlite.domUtils
 		 */
 		public static function openAsByteArray(path:String):ByteArray
 		{
+			path = escapeUrl(path);
 			var fs:FileStream = open(path);
 			if(!fs)
 				return null;
@@ -90,6 +95,7 @@ package org.flexlite.domUtils
 		 */	
 		public static function openAsString(path:String):String
 		{
+			path = escapeUrl(path);
 			var fs:FileStream = open(path);
 			if(!fs)
 				return "";
@@ -109,6 +115,7 @@ package org.flexlite.domUtils
 		 */		
 		public static function browseForOpen(onSelect:Function,type:int=1,typeFilter:Array=null,title:String="浏览文件",defaultPath:String=""):void
 		{
+			defaultPath = escapeUrl(defaultPath);
 			var file:File;
 			if(defaultPath=="")
 				file = new File;
@@ -145,9 +152,10 @@ package org.flexlite.domUtils
 		 */		
 		public static function browseForSave(onSelect:Function,defaultPath:String=null,title:String="保存文件"):void
 		{
+			defaultPath = escapeUrl(defaultPath);
 			var file:File
 			if(defaultPath!=null)
-				file = new File(File.applicationDirectory.resolvePath(defaultPath).nativePath);
+				file = File.applicationDirectory.resolvePath(defaultPath);
 			else
 				file = new File;
 			file.addEventListener(Event.SELECT,function(e:Event):void{
@@ -162,11 +170,12 @@ package org.flexlite.domUtils
 		 * @param onSelect 回调函数：onSelect(file:File)
 		 * @param title 对话框标题
 		 */		
-		public static function browsewAndSave(data:Object,defaultPath:String=null,title:String="保存文件"):void
+		public static function browseAndSave(data:Object,defaultPath:String=null,title:String="保存文件"):void
 		{
+			defaultPath = escapeUrl(defaultPath);
 			var file:File
 			if(defaultPath!=null)
-				file = new File(File.applicationDirectory.resolvePath(defaultPath).nativePath);
+				file = File.applicationDirectory.resolvePath(defaultPath);
 			else
 				file = new File;
 			file.addEventListener(Event.SELECT,function(e:Event):void{
@@ -183,8 +192,13 @@ package org.flexlite.domUtils
 		 */		
 		public static function moveTo(source:String,dest:String,overwrite:Boolean=false):Boolean
 		{
+			source = escapeUrl(source);
+			dest = escapeUrl(dest);
 			var file:File = new File(File.applicationDirectory.resolvePath(source).nativePath);
+			//必须创建绝对位置的File才能移动成功。
 			var destFile:File = new File(File.applicationDirectory.resolvePath(dest).nativePath);
+			if(destFile.exists)
+				deletePath(destFile.nativePath);
 			try
 			{
 				file.moveTo(destFile,overwrite);
@@ -204,8 +218,13 @@ package org.flexlite.domUtils
 		 */	
 		public static function copyTo(source:String,dest:String,overwrite:Boolean=false):Boolean
 		{
-			var file:File = new File(File.applicationDirectory.resolvePath(source).nativePath);
+			source = escapeUrl(source);
+			dest = escapeUrl(dest);
+			var file:File = File.applicationDirectory.resolvePath(source);
+			//必须创建绝对位置的File才能移动成功。
 			var destFile:File = new File(File.applicationDirectory.resolvePath(dest).nativePath);
+			if(destFile.exists)
+				deletePath(destFile.nativePath);
 			try
 			{
 				file.copyTo(destFile,overwrite);
@@ -224,6 +243,7 @@ package org.flexlite.domUtils
 		 */		
 		public static function deletePath(path:String,moveToTrash:Boolean = false):Boolean
 		{
+			path = escapeUrl(path);
 			var file:File = new File(File.applicationDirectory.resolvePath(path).nativePath);
 			if(moveToTrash)
 			{
@@ -269,8 +289,8 @@ package org.flexlite.domUtils
 		 */		
 		public static function getDirectory(path:String):String
 		{
+			path = escapeUrl(path);
 			var endIndex:int = path.lastIndexOf("/");
-			endIndex = Math.max(path.lastIndexOf("\\"),endIndex);
 			if(endIndex==-1)
 			{
 				return "";
@@ -284,9 +304,17 @@ package org.flexlite.domUtils
 		{
 			if(path==null||path=="")
 				return "";
+			path = escapeUrl(path);
 			var startIndex:int = path.lastIndexOf("/");
-			startIndex = Math.max(path.lastIndexOf("\\"),startIndex);
-			var endIndex:int = path.lastIndexOf(".");
+			var endIndex:int;
+			if(startIndex>0&&startIndex==path.length-1)
+			{
+				path = path.substring(0,path.length-1);
+				startIndex = path.lastIndexOf("/");
+				endIndex = path.length;
+				return path.substring(startIndex+1,endIndex);
+			}
+			endIndex = path.lastIndexOf(".");
 			if(endIndex==-1)
 				endIndex = path.length;
 			return path.substring(startIndex+1,endIndex);
@@ -297,13 +325,16 @@ package org.flexlite.domUtils
 		 * @param dir 要搜索的文件夹
 		 * @param extension 要搜索的文件扩展名，例如："png"。不设置表示获取所有类型文件。注意：若设置了filterFunc，则忽略此参数。
 		 * @param filterFunc 过滤函数：filterFunc(file:File):Boolean,参数为遍历过程中的每一个文件夹或文件，返回true则加入结果列表或继续向下查找。
+		 * @return File对象列表
 		 */		
 		public static function search(dir:String,extension:String=null,filterFunc:Function=null):Array
 		{
-			var file:File = new File(File.applicationDirectory.resolvePath(dir).nativePath);
+			dir = escapeUrl(dir);
+			var file:File = File.applicationDirectory.resolvePath(dir);
 			var result:Array = [];
 			if(!file.isDirectory)
 				return result;
+			extension = extension?extension.toLowerCase():"";
 			findFiles(file,result,extension,filterFunc);
 			return result;
 		}
@@ -337,16 +368,12 @@ package org.flexlite.domUtils
 						result.push(file);
 					}
 				}
-				else if(extension!=null)
+				else if(extension&&file.extension)
 				{
-					if(file.type.substring(1,file.type.length).toLowerCase() == extension)
+					if(file.extension.toLowerCase() == extension)
 					{
 						result.push(file);
 					}
-				}
-				else
-				{
-					result.push(file);
 				}
 			}
 		}
@@ -356,7 +383,24 @@ package org.flexlite.domUtils
 		 */		
 		public static function url2Path(url:String):String
 		{
+			url = escapeUrl(url);
 			return File.applicationDirectory.resolvePath(url).nativePath;
+		}
+		/**
+		 * 指定路径的文件或文件夹是否存在
+		 */		
+		public static function exists(path:String):Boolean
+		{
+			path = escapeUrl(path);
+			var file:File = File.applicationDirectory.resolvePath(path);
+			return file.exists;
+		}
+		/**
+		 * 转换url中的反斜杠为斜杠
+		 */
+		public static function escapeUrl(url:String):String
+		{
+			return Boolean(!url)?"":url.split("\\").join("/");
 		}
 	}
 }

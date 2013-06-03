@@ -40,9 +40,9 @@
 //				MonsterDebugger.initialize(this);
 				
 				// 初始化注入规则
-				Injector.mapValue(IBitmapEncoder,new Jpeg32Encoder(), "jpeg32");
-				Injector.mapValue(IBitmapEncoder,new JpegXREncoder(), "jpegxr");
-				Injector.mapValue(IBitmapEncoder,new PngEncoder(), "png");
+//				Injector.mapValue(IBitmapEncoder,new Jpeg32Encoder(), "jpeg32");
+//				Injector.mapValue(IBitmapEncoder,new JpegXREncoder(), "jpegxr");
+//				Injector.mapValue(IBitmapEncoder,new PngEncoder(), "png");
 				
 				// 默认导出路径设置
 				checkboxSourcePath.selected = true;

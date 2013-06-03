@@ -9,6 +9,7 @@ package org.flexlite.domUtils.loader
 	import flash.net.URLRequest;
 	import flash.system.ApplicationDomain;
 	import flash.system.LoaderContext;
+	import flash.utils.ByteArray;
 
 	/**
 	 * 对单个Loader类加载过程的封装
@@ -125,6 +126,40 @@ package org.flexlite.domUtils.loader
 			{
 				loader.load(new URLRequest(url));
 			}
+		}
+		/**
+		 * 从字节流加载Loader显示对象
+		 * @param bytes 文件的字节流对象
+		 * @param compFunc 返回结果时的回调函数 onComp(data:Loader)
+		 * @param progressFunc 加载进度回调函数 onProgress(event:ProgressEvent)
+		 * @param ioErrorFunc 加载失败回调函数 onIoError(event:IOErrorEvent)
+		 * @param appDomain 加载使用的程序域
+		 */			
+		public function loadLoaderFromBytes(bytes:ByteArray,compFunc:Function,progressFunc:Function=null,ioErrorFunc:Function=null,appDomain:ApplicationDomain=null):void
+		{
+			if(loader == null)
+			{
+				loader = new Loader();
+			}
+			format = FORMAT_LOADER;
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE,onComp);
+			loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS,onProgress);
+			loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,ioError);
+			this.compFunc = compFunc;
+			this.progressFunc = progressFunc;
+			this.ioErrorFunc = ioErrorFunc;
+			var ldc:LoaderContext;
+			if(appDomain)
+			{
+				ldc = new LoaderContext(false,appDomain);
+				
+			}
+			else
+			{
+				ldc = new LoaderContext();
+			}
+			ldc.allowCodeImport = true;
+			loader.loadBytes(bytes,ldc);
 		}
 		
 		/**

@@ -1,33 +1,57 @@
 package org.flexlite.domDisplay.codec
-{
+{	
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.FrameLabel;
-	import flash.display.MovieClip;
-	import flash.geom.ColorTransform;
-	import flash.geom.Matrix;
+	import flash.display.Sprite;
+	import flash.display.Stage;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
+	import flash.utils.getTimer;
 	
 	import org.flexlite.domCore.Injector;
 	import org.flexlite.domCore.dx_internal;
 	import org.flexlite.domDisplay.DxrData;
+	import org.flexlite.domDisplay.image.Jpeg32Encoder;
+	import org.flexlite.domDisplay.image.JpegXREncoder;
+	import org.flexlite.domDisplay.image.PngEncoder;
 	import org.flexlite.domUtils.CRC32Util;
 	
 	use namespace dx_internal;
 
 	/**
 	 * DXR动画编码器
+	 * 注意：在AIR里，影片剪辑若不在显示列表，切换帧时会有残影的bug，转换前请先将MC都加到显示列表里。FP里没有这个问题。
 	 * @author DOM
 	 */	
-	public class DxrEncoder
+	public class DxrEncoder extends DxrDrawer
 	{
 		/**
 		 * 构造函数
 		 */		
 		public function DxrEncoder()
 		{
+			if(!injected)
+			{
+				injected = true;
+				doInject();
+			}
+		}
+		
+		private static var injected:Boolean = false;
+		/**
+		 * 执行位图解码器注入
+		 */		
+		private static function doInject():void
+		{
+			if(!Injector.hasMapRule(IBitmapEncoder,"png"))
+				Injector.mapClass(IBitmapEncoder,PngEncoder,"png");
+			if(!Injector.hasMapRule(IBitmapEncoder,"jpegxr"))
+				Injector.mapClass(IBitmapEncoder,JpegXREncoder,"jpegxr");
+			if(!Injector.hasMapRule(IBitmapEncoder,"jpeg32"))
+				Injector.mapClass(IBitmapEncoder,Jpeg32Encoder,"jpeg32");
 		}
 		/**
 		 * 默认位图编解码器标识符
@@ -64,8 +88,9 @@ package org.flexlite.domDisplay.codec
 			{
 				var codec:String = codecList?codecList[index]:DEFAULT_CODEC;
 				var key:String = keyList?keyList[index]:null;
-				var dxrData:DxrData = drawDxrData(mc,key,codec);
-				if(key==null||key=="")
+				var dxrData:DxrData = drawDxrData(mc,key);
+				dxrData._codecKey = codec;
+				if(!key)
 				{
 					generateKey(dxrData);
 				}
@@ -73,6 +98,47 @@ package org.flexlite.domDisplay.codec
 				index++;
 			}
 			return dxrDataList;
+		}
+		/**
+		 * 调整偏移量用的容器
+		 */		
+		private var container:Sprite
+		/**
+		 * 复写父级方法，修正非整数的偏移量。
+		 */		
+		override dx_internal function drawDisplayObject(dp:DisplayObject, dxrData:DxrData, frame:int):void
+		{
+			var dpRect:Rectangle = dp.getBounds(dp);
+			var offsetX:Number = dpRect.x%1;
+			var offsetY:Number = dpRect.y%1;
+			var stage:Stage = dp.stage;
+			if(stage&&(Math.abs(offsetX)>0||Math.abs(offsetY)>0))
+			{
+				if(!container)
+				{
+					container = new Sprite();
+					container.visible = false;
+				}
+				stage.addChild(container);
+				var oldX:Number = dp.x;
+				var oldY:Number = dp.y;
+				var oldParent:DisplayObjectContainer = dp.parent;
+				container.addChild(dp);
+				dp.x = -dpRect.x;
+				dp.y = -dpRect.y;
+				super.drawDisplayObject(container,dxrData,frame);
+				var offsetPoint:Point = dxrData.frameOffsetList[frame];
+				offsetPoint.x = offsetPoint.x +Math.round(dpRect.x);
+				offsetPoint.y = offsetPoint.y +Math.round(dpRect.y);
+				oldParent.addChild(dp);
+				dp.x = oldX;
+				dp.y = oldY;
+				stage.removeChild(container);
+			}
+			else
+			{
+				super.drawDisplayObject(dp,dxrData,frame);
+			}
 		}
 		
 		/**
@@ -128,9 +194,11 @@ package org.flexlite.domDisplay.codec
 		 */		
 		private function encodeDxrData(dxrData:DxrData,maxBitmapWidth:Number=4000,maxBitmapHeight:Number=4000):Object
 		{
+			var copyFrom:Array = compareBitmap(dxrData);
+			var copyFromIndex:int;
 			var bitmapEncoder:IBitmapEncoder = Injector.getInstance(IBitmapEncoder,dxrData.codecKey);
 			var data:Object = {codec:bitmapEncoder.codecKey,bitmapList:[],frameInfo:[]};
-			var frmaeInfo:Array;
+			var frameInfo:Array;
 			var tempBmData:BitmapData = new BitmapData(maxBitmapWidth,maxBitmapHeight,true,0);
 			var bitmapIndex:int = 0;
 			var currentX:Number = 0;
@@ -139,13 +207,31 @@ package org.flexlite.domDisplay.codec
 			var index:int = 0;
 			var tempBmRect:Rectangle;
 			var pageData:BitmapData;
+			var offsetPoint:Point;
 			for each(var frameBmData:BitmapData in dxrData.frameList)
 			{
 				var offsetRect:Rectangle = getColorRect(frameBmData);
+				offsetPoint = dxrData.frameOffsetList[index];
 				if(offsetRect.width>maxBitmapWidth||offsetRect.height>maxBitmapHeight)
 				{
 					throw new Error("DXR动画："+dxrData.key+" 的第"+index
 						+"帧超过了所设置的最大位图尺寸:"+maxBitmapWidth+"x"+maxBitmapHeight+"!");
+				}
+				if(copyFrom[index]!==undefined)
+				{
+					copyFromIndex = copyFrom[index];
+					frameInfo = data.frameInfo[copyFromIndex];
+					frameInfo = frameInfo.concat();
+					frameInfo[5] = offsetPoint.x+offsetRect.x;
+					frameInfo[6] = offsetPoint.y+offsetRect.y;
+					if(frameInfo.length<9)
+					{
+						frameInfo[7] = frameInfo[8] = 0;
+					}
+					frameInfo[9] = copyFromIndex;
+					data.frameInfo[index] = frameInfo;
+					index++;
+					continue;
 				}
 				if(offsetRect.width>maxBitmapWidth-currentX)
 				{
@@ -156,6 +242,8 @@ package org.flexlite.domDisplay.codec
 				if(offsetRect.height>maxBitmapHeight-currentY)
 				{
 					tempBmRect = getColorRect(tempBmData);
+					tempBmRect.x = 0;
+					tempBmRect.y = 0;
 					pageData = new BitmapData(tempBmRect.width,tempBmRect.height,true,0);
 					pageData.copyPixels(tempBmData,tempBmRect,new Point(0,0),null,null,true);
 					data.bitmapList[bitmapIndex] = bitmapEncoder.encode(pageData);
@@ -166,22 +254,21 @@ package org.flexlite.domDisplay.codec
 					bitmapIndex++;
 				}
 				tempBmData.copyPixels(frameBmData,offsetRect,new Point(currentX,currentY),null,null,true);
-				var offsetPoint:Point = dxrData.frameOffsetList[index];
-				frmaeInfo = [bitmapIndex,currentX,currentY,offsetRect.width,offsetRect.height,
+				frameInfo = [bitmapIndex,currentX,currentY,offsetRect.width,offsetRect.height,
 					offsetPoint.x+offsetRect.x,offsetPoint.y+offsetRect.y];
 				var filterOffset:Point = dxrData.filterOffsetList[index];
 				if(filterOffset)
 				{
-					frmaeInfo[7] = filterOffset.x;
-					frmaeInfo[8] = filterOffset.y;
+					frameInfo[7] = filterOffset.x;
+					frameInfo[8] = filterOffset.y;
 				}
-				data.frameInfo[index] = frmaeInfo;
+				data.frameInfo[index] = frameInfo;
 				maxHeight = Math.max(maxHeight,offsetRect.height);
 				currentX += offsetRect.width; 
 				index++;
 			}
 			tempBmRect = getColorRect(tempBmData);
-			if(tempBmRect.width>1&&tempBmRect.height>1)
+			if(tempBmRect.width>=1&&tempBmRect.height>=1)
 			{
 				pageData = new BitmapData(tempBmRect.width,tempBmRect.height,true,0);
 				pageData.copyPixels(tempBmData,tempBmRect,new Point(0,0),null,null,true);
@@ -209,57 +296,35 @@ package org.flexlite.domDisplay.codec
 			}
 			return data;
 		}
-		
 		/**
-		 * 获取指定BitmapData中包含像素的最大矩形区域。
+		 * 比较位图，获取位图数据相同的索引映射表。
 		 */		
-		private function getColorRect(bitmapData:BitmapData):Rectangle
+		private function compareBitmap(dxrData:DxrData):Array
 		{
-			var rect:Rectangle =  bitmapData.getColorBoundsRect(0xff000000,0,false);
-			if(rect.width<1)
-				rect.width = 1;
-			if(rect.height<1)
-				rect.height = 1;
-			return rect;
+			var copyFrom:Array = [];
+			var frameList:Array = dxrData.frameList;
+			var length:int = frameList.length;
+			var frameA:BitmapData;
+			var frameB:BitmapData;
+			for(var i:int=0;i<length;i++)
+			{
+				if(copyFrom[i]!==undefined)
+					continue;
+				frameA = frameList[i];
+				for(var j:int=i+1;j<length;j++)
+				{
+					if(copyFrom[j]!==undefined)
+						continue;
+					frameB = frameList[j];
+					if(frameA==frameB||frameA.compare(frameB)==0)
+					{
+						copyFrom[j] = i;
+					}
+				}
+			}
+			return copyFrom;
 		}
 		
-		/**
-		 * 绘制一个显示对象，转换为DxrData对象。<br/>
-		 * 注意：绘制的结果是其原始显示对象，不包含alpha,scale,rotation,或matrix值。但包含滤镜和除去alpha的colorTransfrom。
-		 * @param dp 要绘制的显示对象，可以是MovieClip
-		 * @param key DxrData对象的导出键名
-		 * @param codec 位图编解码器标识符,"jpegxr"|"jpeg32"|"png",留空默认值为"jpeg32"
-		 */	
-		public function drawDxrData(dp:DisplayObject,key:String="",codec:String="jpeg32"):DxrData
-		{
-			if(codec==null||codec=="")
-				codec = DxrEncoder.DEFAULT_CODEC;
-			var dxrData:DxrData = new DxrData(key,codec);
-			if(dp is MovieClip)
-			{
-				var mc:MovieClip = dp as MovieClip;
-				var oldFrame:int = mc.currentFrame;
-				var isPlaying:Boolean = mc.isPlaying;
-				mc.gotoAndStop(1);
-				drawDisplayObject(mc,dxrData);
-				while(mc.currentFrame<mc.totalFrames)
-				{
-					mc.gotoAndStop(mc.currentFrame+1);
-					drawDisplayObject(mc,dxrData);
-				}
-				if(isPlaying)
-					mc.gotoAndPlay(oldFrame);
-				else
-					mc.gotoAndStop(oldFrame);
-				dxrData._frameLabels = mc.currentLabels;
-			}
-			else
-			{
-				drawDisplayObject(dp,dxrData);
-			}
-			dxrData._scale9Grid = dp.scale9Grid;
-			return dxrData;
-		}
 		/**
 		 * 为指定的dxrData生成唯一的key
 		 * @param dxrData 要赋值key的DxrData对象
@@ -273,54 +338,6 @@ package org.flexlite.domDisplay.codec
 			}
 			var crc32:uint = CRC32Util.getCRC32(buf);
 			dxrData._key = "DXR__"+crc32.toString(16).toUpperCase();
-		}
-		
-		/**
-		 * 绘制一个显示对象的当前外观，存储其一帧位图信息到dxrData内
-		 */		
-		private function drawDisplayObject(dp:DisplayObject,dxrData:DxrData):void
-		{
-			var dpRect:Rectangle = dp.getBounds(dp);
-			if(dpRect.width<1)
-				dpRect.width = 1;
-			if(dpRect.height<1)
-				dpRect.height = 1;
-			var offsetX:Number = 100;
-			var offsetY:Number = 100;
-			var matrix:Matrix = new Matrix(1,0,0,1,offsetX-dpRect.left,offsetY-dpRect.top);
-			var tempBmData:BitmapData = new BitmapData(dpRect.width+offsetX*2,dpRect.height+offsetY*2,true,0); 
-			var ct:ColorTransform = drawColorTransfrom(dp);
-			tempBmData.draw(dp,matrix,ct,null,null,true);
-			
-			var colorRect:Rectangle = getColorRect(tempBmData);
-			var frameData:BitmapData = new BitmapData(colorRect.width,colorRect.height,true,0);
-			frameData.copyPixels(tempBmData,colorRect,new Point(),null,null,true);
-			dxrData.frameList.push(frameData);
-			var offsetPoint:Point = new Point(Math.round(dpRect.left)+colorRect.x-offsetX,
-				Math.round(dpRect.top)+colorRect.y-offsetY);
-			dxrData.frameOffsetList.push(offsetPoint);
-			var filterOffset:Point = new Point(Math.round(colorRect.width-dpRect.width),
-				Math.round(colorRect.height-dpRect.height));
-			if(filterOffset.x!=0||filterOffset.y!=0)
-			{
-				dxrData.filterOffsetList[dxrData.frameOffsetList.length-1]=filterOffset;
-			}
-		}
-		/**
-		 * 获取指定显示对象的除去alpha值的colorTransform对象。若对象各个属性都是初始状态，则返回null。
-		 */		
-		private function drawColorTransfrom(dp:DisplayObject):ColorTransform
-		{
-			var ct:ColorTransform = dp.transform.colorTransform;
-			if(ct.redMultiplier==1&&ct.greenMultiplier==1&&ct.blueMultiplier==1&&
-				ct.redOffset==0&&ct.greenOffset==0&&ct.blueOffset==0&&ct.alphaOffset==0)
-			{
-				return null;
-			}
-			var newCT:ColorTransform = new ColorTransform();
-			newCT.concat(ct);
-			newCT.alphaMultiplier = 1;
-			return newCT;
 		}
 	}
 }
