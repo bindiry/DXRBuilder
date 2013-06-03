@@ -32,17 +32,9 @@
 			{
 				
 				// 初骀化文件处理器
-//				FileHandler.getInstance().bgWorker = WorkerFactory.getWorkerFromClass(MyWorker, this.systemManager.stage.loaderInfo.bytes);
 				FileHandler.getInstance().initialize(btnChooseFiles, listFiles);
 				// 文件列表相关
 				listFiles.allowMultipleSelection = false;
-				
-//				MonsterDebugger.initialize(this);
-				
-				// 初始化注入规则
-//				Injector.mapValue(IBitmapEncoder,new Jpeg32Encoder(), "jpeg32");
-//				Injector.mapValue(IBitmapEncoder,new JpegXREncoder(), "jpegxr");
-//				Injector.mapValue(IBitmapEncoder,new PngEncoder(), "png");
 				
 				// 默认导出路径设置
 				checkboxSourcePath.selected = true;

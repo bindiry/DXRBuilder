@@ -1,6 +1,5 @@
 package 
 {
-	
 	import flash.display.MovieClip;
 	import flash.events.FileListEvent;
 	import flash.filesystem.File;
@@ -26,9 +25,6 @@ package
 	 */
 	public class FileHandler
 	{
-		[Embed(source="DXRBuilderBgWorker.swf", mimeType="application/octet-stream")]
-		private static var BgWorker_ByteClass:Class;
-
 		/** 单例对象实例 */
 		protected static var _instance:FileHandler;
 		
@@ -38,10 +34,6 @@ package
 		
 		private var _loadFileList:Array;
 		private var _currentLoadFileIndex:int;
-		
-		private var _bgWorker:Worker;
-		private var _bgWorkerCommandChannel:MessageChannel;
-		private var _resultChannel:MessageChannel;
 		
 		private var _exportCompleted:Function;
 		
@@ -67,80 +59,7 @@ package
 			_listFiles = pLoadList;
 			_listFiles.labelField = "field";
 			_filesArrayList = new ArrayList();
-			
-//			registerClassAlias("Result", Result);
-//			
-//			_bgWorker = WorkerDomain.current.createWorker(BgWorker);
-//			_bgWorkerCommandChannel = Worker.current.createMessageChannel(_bgWorker);
-//			_bgWorker.setSharedProperty("incomingCommandChannel", _bgWorkerCommandChannel);
-//			
-//			_resultChannel = _bgWorker.createMessageChannel(Worker.current);
-//			_resultChannel.addEventListener(Event.CHANNEL_MESSAGE, resultMessageHandler);
-//			_bgWorker.setSharedProperty("resultChannel", _resultChannel);
-//			
-//			_bgWorker.addEventListener(Event.WORKER_STATE, bgWorkerStateChange);
 		}
-		
-//		public static function get BgWorker():ByteArray
-//		{
-//			return new BgWorker_ByteClass();
-//		}
-		
-//		protected function bgWorkerStateChange(e:Event):void
-//		{
-//			if (_bgWorker.state == WorkerState.RUNNING)
-//			{
-//				// 开始向后端Worker发送请求
-//				trace("开始向后端Worker发送请求");
-//				var len:int = _filesArrayList.source.length;
-//				for each (var obj:Object in _filesArrayList.source)
-//				{
-//					_bgWorkerCommandChannel.send(["get_byte_array", obj.name, obj.mclist, obj.keylist, obj.formatlist]);
-//				}
-//			}
-//		}
-		
-		/** 后台worker返回生成好的文件数据 */
-//		protected function resultMessageHandler(e:Event):void
-//		{
-//			// 接收数据
-//			var receiveResult:Result = _resultChannel.receive() as Result;
-//			// 写入文件
-//			var fileInfo:Object = getFileInfoFromListByName(receiveResult.name);
-//			var len:int = fileInfo.mclist.length;
-//			var path:String;
-//			var successCount:int = 0;
-//			var failCount:int = 0;
-//			
-//			if (Global.sameAsSource)
-//				path = fileInfo.path.substring(0, fileInfo.path.lastIndexOf(".")) + ".dxr";
-//			else
-//				path = Global.exportPath + "\\" + fileInfo.name.substring(0, fileInfo.name.lastIndexOf(".")) + ".dxr";
-//			
-//			var result:Boolean = FileUtil.save(path, receiveResult.result);
-//			if (result)
-//				successCount++;
-//			else
-//				failCount++;
-//			
-//			removeItemFromListByName(receiveResult.name);
-//			_listFiles.dataProvider = _filesArrayList;
-//			
-//			if (_filesArrayList.length <= 0)
-//			{
-//				Alert.show("转换完成，成功: {0}，失败: {1}"
-//					.replace("{0}", successCount)
-//					.replace("{1}", failCount)
-//				);
-//				successCount = 0;
-//				failCount = 0;
-//				if (_exportCompleted != null)
-//				{
-//					_exportCompleted();
-//					_exportCompleted = null;
-//				}
-//			}
-//		}
 		
 		private function removeItemFromListByName(pName:String):void
 		{
@@ -210,7 +129,6 @@ package
 					obj.formatlist[i] = Global.currentFormat;
 				}
 			}
-			trace("1");
 		}
 		
 		/** 开始读取文件 */
@@ -333,16 +251,6 @@ package
 				}
 			}
 			return result;
-		}
-
-		public function get bgWorker():Worker
-		{
-			return _bgWorker;
-		}
-
-		public function set bgWorker(value:Worker):void
-		{
-			_bgWorker = value;
 		}
 
 	}

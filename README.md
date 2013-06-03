@@ -21,6 +21,9 @@ DXRBuilder是用来转换SWF文件为[Flexlite](http://flexlite.org/)框架可�
 
 ### 版本记录
 
+##### v1.1.4 (06/03/2013)
+* 更新Flexlite DxrEncode，减小dxr体积
+
 ##### v1.1.3 (04/25/2013)
 * 修正选择其他压缩格式无效的bug
 
