@@ -194,6 +194,8 @@ package org.flexlite.domUtils
 		{
 			source = escapeUrl(source);
 			dest = escapeUrl(dest);
+			if(source==dest)
+				return true;
 			var file:File = new File(File.applicationDirectory.resolvePath(source).nativePath);
 			//必须创建绝对位置的File才能移动成功。
 			var destFile:File = new File(File.applicationDirectory.resolvePath(dest).nativePath);
@@ -220,6 +222,8 @@ package org.flexlite.domUtils
 		{
 			source = escapeUrl(source);
 			dest = escapeUrl(dest);
+			if(source==dest)
+				return true;
 			var file:File = File.applicationDirectory.resolvePath(source);
 			//必须创建绝对位置的File才能移动成功。
 			var destFile:File = new File(File.applicationDirectory.resolvePath(dest).nativePath);
@@ -298,6 +302,20 @@ package org.flexlite.domUtils
 			return path.substr(0,endIndex+1);
 		}
 		/**
+		 * 获得路径的扩展名
+		 */		
+		public static function getExtension(path:String):String
+		{
+			path = escapeUrl(path);
+			var index:int = path.lastIndexOf(".");
+			if(index==-1)
+				return "";
+			var i:int = path.lastIndexOf("/");
+			if(i>index)
+				return "";
+			return path.substring(index+1);
+		}
+		/**
 		 * 获取路径的文件名(不含扩展名)或文件夹名
 		 */		
 		public static function getFileName(path:String):String
@@ -368,12 +386,16 @@ package org.flexlite.domUtils
 						result.push(file);
 					}
 				}
-				else if(extension&&file.extension)
+				else if(extension)
 				{
-					if(file.extension.toLowerCase() == extension)
+					if(file.extension&&file.extension.toLowerCase() == extension)
 					{
 						result.push(file);
 					}
+				}
+				else
+				{
+					result.push(file);
 				}
 			}
 		}
@@ -384,7 +406,18 @@ package org.flexlite.domUtils
 		public static function url2Path(url:String):String
 		{
 			url = escapeUrl(url);
-			return File.applicationDirectory.resolvePath(url).nativePath;
+			var file:File = File.applicationDirectory.resolvePath(url);
+			if(url.indexOf("file:")==0)
+				file.url = url;
+			return escapeUrl(file.nativePath);
+		}
+		/**
+		 * 将本地路径转换为url
+		 */		
+		public static function path2Url(path:String):String
+		{
+			path = escapeUrl(path);
+			return File.applicationDirectory.resolvePath(path).url;
 		}
 		/**
 		 * 指定路径的文件或文件夹是否存在
@@ -393,6 +426,8 @@ package org.flexlite.domUtils
 		{
 			path = escapeUrl(path);
 			var file:File = File.applicationDirectory.resolvePath(path);
+			if(path.indexOf("file:")==0)
+				file.url = path;
 			return file.exists;
 		}
 		/**

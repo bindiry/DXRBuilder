@@ -1,9 +1,9 @@
 package org.flexlite.domUtils
 {
 	import flash.system.ApplicationDomain;
+	import flash.utils.ByteArray;
 	
 	import org.flexlite.domUtils.loader.SingleLoader;
-
 
 	/**
 	 * 调用各种数据请求功能的入口类
@@ -12,7 +12,8 @@ package org.flexlite.domUtils
 	public class DomLoader
 	{
 		
-	
+
+
 		/**
 		 * 根据url获取指定文件的Loader显示对象
 		 * @param url 文件的url路径
@@ -80,8 +81,19 @@ package org.flexlite.domUtils
 			classLoader.loadExternalClasses(url,onComp,onProgress,onIoError,appDomain);
 		}
 		
-	
-		//==========多个加载项=========end=========
-		
+
+		/**
+		 * 从字节流加载Loader显示对象
+		 * @param bytes 文件的字节流对象
+		 * @param onComp 返回结果时的回调函数 onComp(data:Loader)
+		 * @param onProgress 加载进度回调函数 onProgress(event:ProgressEvent)
+		 * @param onIoError 加载失败回调函数 onIoError(event:IOErrorEvent)
+		 * @param appDomain 加载使用的程序域
+		 */	
+		public static function loadLoaderFromBytes(bytes:ByteArray,onComp:Function,onProgress:Function=null,onIoError:Function=null,appDomain:ApplicationDomain=null):void
+		{
+			var loader:SingleLoader = new SingleLoader();
+			loader.loadLoaderFromBytes(bytes,onComp,onProgress,onIoError,appDomain);
+		}	
 	}
 }

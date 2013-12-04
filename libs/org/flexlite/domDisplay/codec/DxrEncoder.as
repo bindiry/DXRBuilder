@@ -1,15 +1,15 @@
 package org.flexlite.domDisplay.codec
-{	
+{
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.FrameLabel;
+	import flash.display.MovieClip;
 	import flash.display.Sprite;
 	import flash.display.Stage;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
-	import flash.utils.getTimer;
 	
 	import org.flexlite.domCore.Injector;
 	import org.flexlite.domCore.dx_internal;
@@ -88,8 +88,7 @@ package org.flexlite.domDisplay.codec
 			{
 				var codec:String = codecList?codecList[index]:DEFAULT_CODEC;
 				var key:String = keyList?keyList[index]:null;
-				var dxrData:DxrData = drawDxrData(mc,key);
-				dxrData._codecKey = codec;
+				var dxrData:DxrData = drawDxrData(mc,key,codec);
 				if(!key)
 				{
 					generateKey(dxrData);
@@ -98,6 +97,41 @@ package org.flexlite.domDisplay.codec
 				index++;
 			}
 			return dxrDataList;
+		}
+		/**
+		 * 绘制一个显示对象，转换为DxrData对象。<br/>
+		 * 注意：绘制的结果是其原始显示对象，不包含alpha,scale,rotation,或matrix值。但包含滤镜和除去alpha的colorTransfrom。
+		 * @param dp 要绘制的显示对象，可以是MovieClip
+		 * @param key DxrData对象的导出键名
+		 * @param codec 位图编解码器标识符,"jpegxr"|"jpeg32"|"png",留空默认值为"jpeg32"
+		 */	
+		public function drawDxrData(dp:DisplayObject,key:String="",codec:String="jpeg32"):DxrData
+		{
+			var dxrData:DxrData = new DxrData(key,codec);
+			if(dp is MovieClip)
+			{
+				var mc:MovieClip = dp as MovieClip;
+				var oldFrame:int = mc.currentFrame;
+				var isPlaying:Boolean = mc.isPlaying;
+				var totalFrames:int = mc.totalFrames;
+				for(var frame:int=0;frame<totalFrames;frame++)
+				{
+					mc.gotoAndStop(frame+1);
+					drawDisplayObject(mc,dxrData,frame);
+				}
+				if(isPlaying)
+					mc.gotoAndPlay(oldFrame);
+				else
+					mc.gotoAndStop(oldFrame);
+				dxrData._frameLabels = mc.currentLabels;
+			}
+			else
+			{
+				drawDisplayObject(dp,dxrData,0);
+			}
+			if(dp.scale9Grid)
+				dxrData._scale9Grid = dp.scale9Grid.clone();
+			return dxrData;
 		}
 		/**
 		 * 调整偏移量用的容器
@@ -122,17 +156,23 @@ package org.flexlite.domDisplay.codec
 				stage.addChild(container);
 				var oldX:Number = dp.x;
 				var oldY:Number = dp.y;
+				var oldScaleX:Number = dp.scaleX;
+				var oldScaleY:Number = dp.scaleY;
 				var oldParent:DisplayObjectContainer = dp.parent;
+				var oldIndex:int = oldParent.getChildIndex(dp);
 				container.addChild(dp);
 				dp.x = -dpRect.x;
 				dp.y = -dpRect.y;
+				dp.scaleX = dp.scaleY = 1;
 				super.drawDisplayObject(container,dxrData,frame);
 				var offsetPoint:Point = dxrData.frameOffsetList[frame];
 				offsetPoint.x = offsetPoint.x +Math.round(dpRect.x);
 				offsetPoint.y = offsetPoint.y +Math.round(dpRect.y);
-				oldParent.addChild(dp);
+				oldParent.addChildAt(dp,oldIndex);
 				dp.x = oldX;
 				dp.y = oldY;
+				dp.scaleX = oldScaleX;
+				dp.scaleY = oldScaleY;
 				stage.removeChild(container);
 			}
 			else

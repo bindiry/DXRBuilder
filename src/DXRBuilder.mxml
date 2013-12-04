@@ -12,13 +12,9 @@
 			import mx.events.CloseEvent;
 			import mx.events.FlexEvent;
 			
-			import org.flexlite.domCore.Injector;
-			import org.flexlite.domDisplay.codec.IBitmapEncoder;
-			import org.flexlite.domDisplay.image.Jpeg32Encoder;
-			import org.flexlite.domDisplay.image.JpegXREncoder;
-			import org.flexlite.domDisplay.image.PngEncoder;
-			
 			import spark.events.IndexChangeEvent;
+			
+			import update.AirUpdate;
 			
 			[Bindable]
 			public var exportFormatList:ArrayCollection = new ArrayCollection([
@@ -27,9 +23,13 @@
 				{label: "PNG", value: "png"}
 			]);
 			
+			public static const DXRBUILDER_EXPORT_FORMAT:String = "DXRBUILDER_EXPORT_FORMAT";
+			
 			/** 应用初始化 */
 			protected function application1_creationCompleteHandler(event:FlexEvent):void
 			{
+				// 检查更新
+				new AirUpdate().checkUpdate();
 				
 				// 初骀化文件处理器
 				FileHandler.getInstance().initialize(btnChooseFiles, listFiles);
@@ -40,6 +40,12 @@
 				checkboxSourcePath.selected = true;
 				Global.sameAsSource = true;
 				btnExportPath.enabled = false;
+				
+				// 设置默认导出格式
+				var exportFormatValue:String = getExportFormat();
+				var exportFormatIndex:int = getExportFormatIndex(exportFormatValue);
+				ddlExportFormat.setSelectedIndex(exportFormatIndex);
+				Global.currentFormat = exportFormatValue;
 				
 				// 开启拖拽文件支持
 				this.addEventListener(NativeDragEvent.NATIVE_DRAG_ENTER, onDrop);
@@ -171,7 +177,41 @@
 			{
 				var ddlExportFormat:DropDownList = e.target as DropDownList;
 				Global.currentFormat = ddlExportFormat.selectedItem.value;
+				saveExportFormat(ddlExportFormat.selectedItem.value);
 				FileHandler.getInstance().updateFormatList();
+			}
+			
+			protected function saveExportFormat(pValue:String):void
+			{
+				var bytes:ByteArray = new ByteArray();
+				bytes.writeUTFBytes(pValue);
+				EncryptedLocalStore.setItem(DXRBUILDER_EXPORT_FORMAT, bytes);
+			}
+			
+			protected function getExportFormat():String
+			{
+				var result:String = "jpeg32";
+				var bytes:ByteArray = EncryptedLocalStore.getItem(DXRBUILDER_EXPORT_FORMAT);
+				if (bytes)
+				{
+					result = bytes.readUTFBytes(bytes.length);
+				}
+				return result;
+			}
+			
+			protected function getExportFormatIndex(pValue:String):int
+			{
+				var result:int = 0;
+				var len:int = exportFormatList.length;
+				for (var i:int = 0; i < len; i++)
+				{
+					if (exportFormatList[i].value == pValue)
+					{
+						result = i;
+						break;
+					}
+				}
+				return result;
 			}
 			
 		]]>

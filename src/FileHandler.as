@@ -4,20 +4,18 @@ package
 	import flash.events.FileListEvent;
 	import flash.filesystem.File;
 	import flash.net.FileFilter;
-	import flash.system.MessageChannel;
-	import flash.system.Worker;
 	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayList;
 	import mx.controls.Alert;
 	
-	import org.flexlite.domDisplay.codec.DxrEncoder;
-	import org.flexlite.domUtils.DomLoader;
-	import org.flexlite.domUtils.FileUtil;
-	
 	import spark.components.Button;
 	import spark.components.List;
 	import spark.core.SpriteVisualElement;
+	
+	import org.flexlite.domDisplay.codec.DxrEncoder;
+	import org.flexlite.domUtils.DomLoader;
+	import org.flexlite.domUtils.FileUtil;
 	
 	/**
 	 * 让用户选择文件
@@ -174,7 +172,6 @@ package
 		{
 			_exportCompleted = pOnCompleted;
 			// 启动后台处理
-//			_bgWorker.start();
 			var dxrEncode:DxrEncoder = new DxrEncoder();
 			var path:String;
 			var successCount:int = 0;
