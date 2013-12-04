@@ -15,7 +15,7 @@ DXRBuilder是用来转换SWF文件为[Flexlite](http://flexlite.org/)框架可�
 * PNG: 压缩率不高，但效果好
 
 ### 编译环境
-编译前，需在项目源路径中引入libs目录，项目需使用 [Flex SDK 4.6](http://www.adobe.com/devnet/flex/flex-sdk-download.html) 和 [Air SDK 3.5](http://www.adobe.com/devnet/air/air-sdk-download.html)。
+编译前，需在项目源路径中引入libs目录，项目需使用 [Flex SDK 4.11.0 和 Air SDK 3.9](http://flex.apache.org/download-binaries.html)。
 
 ![DXRBuilder载图](https://github.com/bindiry/DXRBuilder/raw/master/dxrbuilder.png)
 
