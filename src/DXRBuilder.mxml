@@ -7,6 +7,8 @@
 					   creationComplete="application1_creationCompleteHandler(event)">
 	<fx:Script>
 		<![CDATA[
+			import air.update.ApplicationUpdaterUI;
+			
 			import mx.collections.ArrayCollection;
 			import mx.controls.Alert;
 			import mx.events.CloseEvent;
@@ -28,6 +30,8 @@
 			/** 应用初始化 */
 			protected function application1_creationCompleteHandler(event:FlexEvent):void
 			{
+				var appUpdater:ApplicationUpdaterUI = new ApplicationUpdaterUI();
+				nativeWindow.title = "DXRBuilder "+appUpdater.currentVersion;
 				// 检查更新
 				new AirUpdate().checkUpdate();
 				
@@ -44,7 +48,7 @@
 				// 设置默认导出格式
 				var exportFormatValue:String = getExportFormat();
 				var exportFormatIndex:int = getExportFormatIndex(exportFormatValue);
-				ddlExportFormat.setSelectedIndex(exportFormatIndex);
+				ddlExportFormat.selectedIndex = exportFormatIndex;
 				Global.currentFormat = exportFormatValue;
 				
 				// 开启拖拽文件支持
