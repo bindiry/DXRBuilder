@@ -5,7 +5,7 @@ DXRBuilder是用来转换SWF文件为[Flexlite](http://flexlite.org/)框架可�
 
 ### 使用说明
 
-[安装文件下载](http://github.com/bindiry/DXRBuilder/raw/master/DXRBuilder.air)，DXRBuilder只支持导出指定swf文件中含有链接名的MovieClip元件为FlexLite中使用的DXR文件，所以在进行导出前，请确保swf文件中只有MovieClip元件设置了链接名。
+[安装文件下载](https://github.com/bindiry/DXRBuilder/releases)，DXRBuilder只支持导出指定swf文件中含有链接名的MovieClip元件为FlexLite中使用的DXR文件，所以在进行导出前，请确保swf文件中只有MovieClip元件设置了链接名。
 
 关于DXR动画文件的使用，请参考Flexlite的[WIKI](http://wiki.flexlite.org)、[源码](http://github.com/flexlite)和DXR动画文件[结构图](http://wiki.flexlite.org/uploads/201210/1350297604fFF5kVj7.png)。
 
